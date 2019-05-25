@@ -1,0 +1,10 @@
+newjersey
+herostratus
+seeyouagain
+aungsansuukyi
+7
+1998
+tenere
+collins
+6
+dragster
