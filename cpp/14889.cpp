@@ -23,7 +23,7 @@ int min_diff(int i, int n, vector<vector<int>>& synergy, int team_x_syn, vector<
 
     int syn = 0, case_x = INF, case_y = INF;
 
-    if (team_x.size() < 10) {
+    if (static_cast<int>(team_x.size()) < n/2) {
         syn = 0;
         for (int j: team_x) {
             syn += (synergy[i][j] + synergy[j][i]);
@@ -34,7 +34,7 @@ int min_diff(int i, int n, vector<vector<int>>& synergy, int team_x_syn, vector<
         team_x.pop_back();
     }
 
-    if (team_y.size() < 10) {
+    if (static_cast<int>(team_y.size()) < n/2) {
         syn = 0;
         for (int j: team_y) {
             syn += (synergy[i][j] + synergy[j][i]);
