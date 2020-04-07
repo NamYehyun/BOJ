@@ -38,17 +38,26 @@ int main(void) {
     int num_nodes, num_edges;
     cin >> num_nodes >> num_edges;
 
+	vector<vector<int>> adj_matrix(num_nodes+1, vector<int>(num_nodes+1, INF));
+	for (int i = 0; i < num_edges; ++i) {
+		int x, y, w;
+		cin >> x >> y >> w;
+		adj_matrix[x][y] = min(adj_matrix[x][y], w);
+	}
+
     vector<Node*> nodes(num_nodes+1, nullptr);
     for (int id = 1; id <= num_nodes; ++id) {
         nodes[id] = new Node(id);
     }
 
     vector<Edge*> edges;
-    for (int _ = 0; _ < num_edges; ++_) {
-        int x, y, w;
-        cin >> x >> y >> w;
-        edges.push_back(new Edge(nodes[x], nodes[y], w));
-    }
+	for (int i = 1; i <= num_nodes; ++i) {
+		for (int j = 1; j <= num_nodes; ++j) {
+			if (adj_matrix[i][j] != INF) {
+				edges.push_back(new Edge(nodes[i], nodes[j], adj_matrix[i][j]));
+			}
+		}
+	}
 
     nodes[1]->dist = 0;
     for (int _ = 0; _ < num_nodes; ++_) {
