@@ -1,173 +1,132 @@
-#include <iostream>
-#include <vector>
+#include <bits/stdc++.h>
 
 using namespace std;
 
+#define __NARG__(...)	__NARG_I_(__VA_ARGS__, __RSEQ_N())
+#define __NARG_I_(...)	__ARG_N(__VA_ARGS__)
+#define __ARG_N(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, N, ...)	N
+#define __RSEQ_N()	10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0
 
-const int INF = 0x7fffffff;
+#define _VFUNC_(name, n)	name##n
+#define _VFUNC(name, n)		_VFUNC_(name, n)
+#define VFUNC(func, ...)	_VFUNC(func, __NARG__(__VA_ARGS__))(__VA_ARGS__)
 
+#define idxmin(x)			(min_element(begin(x), end(x)) - begin(x))
+#define idxmax(x)			(max_element(begin(x), end(x)) - begin(x))
+#define idxlb(x, a)			(lower_bound(begin(x), end(x), a) - begin(x))
+#define idxub(x, a)			(upper_bound(begin(x), end(x), a) - begin(x))
 
-class Node {
+#define max(...)			VFUNC(MAX, __VA_ARGS__)
+#define MAX1(x)				(x[idxmax(x)])
+#define MAX2(a, b)			((a) > (b) ? (a) : (b))
+#define MAX3(a, b, c)		(MAX2(MAX2((a), (b)), (c)))
+#define MAX4(a, b, c, d)	(MAX2(MAX3((a), (b), (c)), (d)))
+
+#define min(...)			VFUNC(MIN, __VA_ARGS__)
+#define MIN1(x)				(x[idxmin(x)])
+#define MIN2(a, b)			((a) < (b) ? (a) : (b))
+#define MIN3(a, b, c)		(MIN2(MIN2((a), (b)), (c)))
+#define MIN4(a, b, c, d)	(MIN2(MIN3((a), (b), (c)), (d)))
+
+#define get(...)			VFUNC(GET, __VA_ARGS__)
+#define GET1(x)				do { cin >> x; } while (false)
+#define GET2(x, n)			do { x.resize(n); for (auto& a: x) cin >> a; } while (false)
+#define GET3(x, nr, nc)		do { x.resize(nr); for (auto& row: x) { GET2(row, nc); } } while (false)
+
+#define put(...)			VFUNC(PUT, __VA_ARGS__)
+#define PUT1(x)				do { cout << x << '\n'; } while (false)
+
+#ifdef ONLINE_JUDGE
+#define DBG false
+#else
+#define DBG true
+#endif
+
+using ll = long long;
+
+class Item {
 public:
-    int id;
-    int dist;
+	ll node;
+	ll weight;
 
-    Node(int _id, int _dist) {
-        id = _id;
-        dist = _dist;
-    }
+	inline bool operator<(const Item& other) const {
+		return weight < other.weight;
+	}
 
-    bool operator<(const Node& other) {
-        return dist < other.dist;
-    }
+	inline bool operator>(const Item& other) const {
+		return weight > other.weight;
+	}
 };
 
-
-class PriorityQueue {
+class Graph {
 public:
-    int size;
-    vector<Node> min_heap;
+	ll n, m;
+	vector<vector<Item>> adj;
 
-    PriorityQueue(void) {
-        size = 0;
-    }
+	Graph(ll _n): n(_n), m(0) {
+		adj.resize(n, vector<Item>());
+	}
 
-    void enqueue(Node n) {
-        min_heap.push_back(n);
-        ++size;
-
-        int curr = size-1;
-        while (true) {
-            int parent = (curr - 1) / 2;
-
-            if (parent == curr) {
-                break;
-            }
-
-            if (min_heap[curr] < min_heap[parent]) {
-                Node tmp = min_heap[parent];
-                min_heap[parent] = min_heap[curr];
-                min_heap[curr] = tmp;
-            } else {
-                break;
-            }
-
-            curr = parent;
-        }
-
-        return;
-    }
-
-    Node dequeue(void) {
-        Node min_node = min_heap[0];
-
-        min_heap[0] = min_heap[size-1];
-        min_heap.pop_back();
-        --size;
-
-        int curr = 0;
-        while (true) {
-            int l_child = (2*curr+1 < size) ? 2*curr+1 : curr;
-            int r_child = (2*curr+2 < size) ? 2*curr+2 : curr;
-
-            int next = (min_heap[l_child] < min_heap[r_child]) ? l_child : r_child;
-
-            if (min_heap[next] < min_heap[curr]) {
-                Node tmp = min_heap[next];
-                min_heap[next] = min_heap[curr];
-                min_heap[curr] = tmp;
-            } else {
-                break;
-            }
-
-            curr = next;
-        }
-
-        return min_node;
-    }
-
-    bool empty(void) {
-        return size == 0;
-    }
-
-    void print(void) {
-        cout << "[ ";
-        for (auto n: min_heap) {
-            cout << "(" << n.id << ", " << n.dist << ") ";
-        }
-        cout << "]" << endl;
-
-        return;
-    }
+	void add_edge(ll u, ll v, ll w) {
+		adj[u].push_back({ v, w });
+		adj[v].push_back({ u, w });
+	}
 };
 
+vector<ll> dijkstra(const Graph& g, ll r) {
+	vector<ll> ret;
+	ret.resize(g.n, 123456789);
 
-void dijkstra(int root, vector<vector<Node>>& adj_list, vector<int>& result) {
-    PriorityQueue queue;
+	priority_queue<Item, vector<Item>, greater<Item>> pq;
 
-    queue.enqueue(Node(root, 0));
+	ret[r] = 0;
+	pq.push({ r, 0 });
 
-    while (!queue.empty()) {
-        Node curr = queue.dequeue();
+	while (!pq.empty()) {
+		auto [ u, wu ] = pq.top(); pq.pop();
 
-        if (result[curr.id] <= curr.dist) {
-            continue;
-        }
+		for (const auto [ v, w ]: g.adj[u]) {
+			if (ret[v] < ret[u] + w) continue;
 
-        result[curr.id] = curr.dist;
-        for (auto next: adj_list[curr.id]) {
-            if (result[curr.id] + next.dist < result[next.id]) {
-                queue.enqueue(Node(next.id, result[curr.id] + next.dist));                
-            }
-        }
-    }
+			ret[v] = ret[u] + w;
+			pq.push({ v, ret[v] });
+		}
+	}
 
-    return;
+	return ret;
 }
 
+void _main(void) {
+	int n; cin >> n;
+
+	Graph g(n);
+
+	for (ll i = 0; i < n-1; ++i) {
+		ll u, v, w;
+		cin >> u >> v >> w;
+		g.add_edge(u-1, v-1, w);
+	}
+
+	vector<ll> dist1 = dijkstra(g, 0);
+	ll x = idxmax(dist1);
+
+	vector<ll> dist2 = dijkstra(g, x);
+	int y = idxmax(dist2);
+
+	cout << dist2[y] << endl;
+
+	return;
+}
 
 int main(void) {
-    ios_base::sync_with_stdio(false);
-    cin.tie(NULL);
+	cin.sync_with_stdio(false);
+	cin.tie(nullptr);
 
-    int num_nodes;
-    cin >> num_nodes;
+	int t = 1; // cin >> t;
+	do {
+		_main();
+	} while (--t);
 
-    vector<vector<Node>> adj_list(num_nodes+1, vector<Node>());
-    for (int i = 1; i < num_nodes; ++i) {
-        int x, y, d;
-        cin >> x >> y >> d;
-
-        adj_list[x].push_back(Node(y, d));
-        adj_list[y].push_back(Node(x, d));
-    }
-
-    vector<int> result1(num_nodes+1, INF);
-    dijkstra(1, adj_list, result1);
-
-    int max1 = 0;
-    int rad1 = 0;
-    for (int i = 1; i <= num_nodes; ++i) {
-        if (max1 < result1[i]) {
-            max1 = result1[i];
-            rad1 = i;
-        }
-    }
-
-    vector<int> result2(num_nodes+1, INF);
-    dijkstra(rad1, adj_list, result2);
-
-    int max2 = 0;
-    int rad2 = 0;
-    for (int i = 1; i <= num_nodes; ++i) {
-        if (max2 < result2[i]) {
-            max2 = result2[i];
-            rad2 = i;
-        }
-    }
-
-    cout << max2 << endl;
-
-    return EXIT_SUCCESS;
+	return EXIT_SUCCESS;
 }
 
